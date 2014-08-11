@@ -1,2 +1,38 @@
 ---
 # tasks file for plenv
+
+- name: checkout plenv from github
+  git: repo={{ plenv.repo_url }}
+       dest={{ plenv.install_path }}
+       version={{ plenv.repo_version | default("HEAD") }}
+       accept_hostkey=yes
+  sudo: true
+
+- name: get minimum perl-build from github
+  get_url: url={{ item.url }}
+           dest={{ plenv.install_path}}/bin
+           force=yes
+  with_items: plenv.perlbuild_files
+  sudo: true
+
+- name: set permissions for perl-build files
+  file: path={{ plenv.install_path }}/bin/{{ item.name }}
+        mode=0755
+  with_items: plenv.perlbuild_files
+  sudo: true
+
+- name: add plenv initialization to profile
+  template: src=plenv.sh.j2
+            dest=/etc/profile.d/plenv.sh
+            owner=root
+            group=root
+            mode=0755
+  sudo: true
+
+- name: system-wide install
+  include: 'system_install.yml'
+  when: plenv.system_install
+
+- name: user-specific install
+  include: 'user_install.yml'
+  when: plenv.user_install

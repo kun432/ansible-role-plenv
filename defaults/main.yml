@@ -1,2 +1,15 @@
 ---
 # defaults file for plenv
+plenv:
+  repo_url: https://github.com/tokuhirom/plenv.git
+  repo_version: 2.1.1
+  install_path: /usr/local/plenv
+  perlbuild_files:
+    - name: perl-build
+      url: https://raw.githubusercontent.com/tokuhirom/Perl-Build/master/perl-build
+    - name: plenv-install
+      url: https://raw.githubusercontent.com/tokuhirom/Perl-Build/master/bin/plenv-install
+    - name: plenv-uninstall
+      url: https://raw.githubusercontent.com/tokuhirom/Perl-Build/master/bin/plenv-uninstall
+  system_install:
+  user_install:

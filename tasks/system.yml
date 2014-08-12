@@ -1,0 +1,43 @@
+---
+# tasks file for system-wide install plenv 
+- name: create plugins directory (system)
+  file: state=directory path={{ plenv.system_plenv_root }}/plugins
+  sudo: true
+  when: plenv_system.plugins
+
+- name: install plugins (system)
+  git: repo={{ item.repo }} dest={{ plenv.system_plenv_root }}/plugins/{{ item.name }} version={{ item.version | default('HEAD') }}
+  with_items: plenv_system.plugins
+  sudo: true
+  when: plenv_system.plugins
+
+- name: check perl installed (system)
+  shell: bash -lc "plenv versions | grep {{ item }}"
+  sudo: true
+  register: perl_installed
+  with_items: plenv_system.perls
+  when: plenv_system.perls
+  failed_when: perl_installed.rc not in [0,1]
+  changed_when: perl_installed.rc == 1
+  tags:
+    - install
+
+- name: install perl (system)
+  shell: bash -lc "plenv install {{ item.0 }}"
+  sudo: yes
+  with_together:
+    - plenv_system.perls
+    - perl_installed.results
+  when: item.1.stdout.rc == 1
+  tags:
+    - install
+
+- name: install perl (system)
+  shell: bash -lc "plenv install {{ item.0 }}"
+  sudo: yes
+  with_together:
+    - plenv_system.perls
+    - perl_installed.results
+  when: item.1.stdout.rc == 1
+  tags:
+    - install

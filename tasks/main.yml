@@ -30,9 +30,4 @@
   sudo: true
 
 - name: system-wide install
-  include: 'system_install.yml'
-  when: plenv.system_install
-
-- name: user-specific install
-  include: 'user_install.yml'
-  when: plenv.user_install
+  include: 'system.yml'

@@ -1,0 +1,20 @@
+plenv_system:
+  perls:
+    - 5.20.0
+    - 5.16.0
+  global: 5.20.0
+  plugins:
+    - name: plenv-contrib
+      repo: https://github.com/miyagawa/plenv-contrib.git
+#plenv_user:
+#  users:
+#    - name: foo
+#      perls:
+#        - 5.20.0
+#        - 5.16.0
+#      global: 5.20.0
+#    - name: bar
+#      perls:
+#        - 5.18.0
+#        - 5.14.0
+#      global: 5.14.0

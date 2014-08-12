@@ -1,0 +1,6 @@
+- name: create plugins directory (user)
+  file: state=directory path={{ plenv.user_plenv_root }}/plugins
+  with_items: plenv_users
+  sudo: true
+  sudo_user: "{{ item.name }}"
+  when: plenv_user

@@ -28,7 +28,7 @@
   with_together:
     - plenv_system.perls
     - perl_installed.results
-  when: item.1.stdout.rc == 1
+  when: plenv_system.perls is defined and item.1.stdout.rc == 1
   tags:
     - install
 
@@ -38,6 +38,6 @@
   with_together:
     - plenv_system.perls
     - perl_installed.results
-  when: item.1.stdout.rc == 1
+  when: plenv_system.perls is defined and item.1.stdout.rc == 1
   tags:
     - install

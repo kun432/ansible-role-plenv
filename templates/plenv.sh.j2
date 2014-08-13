@@ -1,8 +1,8 @@
 export PATH="{{ plenv.install_path }}/bin:$PATH"
  
-if [ -s "${HOME}/.plenv/bin" ]; then
-  plenv_root="${HOME}/.plenv"
-  export PATH="${plenv_root}/bin:$PATH"
+if [ -s "$HOME/.plenv/bin" ]; then
+  plenv_root="~/.plenv"
+  export PATH="$HOME/.plenv/bin:$PATH"
   eval "$(plenv init -)"
 elif [ -s "{{ plenv.install_path }}" ]; then
   plenv_root="{{ plenv.install_path }}"

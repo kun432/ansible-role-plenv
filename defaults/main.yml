@@ -11,11 +11,6 @@ plenv:
       url: https://raw.githubusercontent.com/tokuhirom/Perl-Build/master/bin/plenv-install
     - name: plenv-uninstall
       url: https://raw.githubusercontent.com/tokuhirom/Perl-Build/master/bin/plenv-uninstall
-  system_plenv_root: /usr/local/plenv
-  user_plenv_root:  $HOME/.plenv
 
-plenv_system:
-  perls: []
-  plugins: []
-  global: 
-plenv_user:
+plenv_system: {}
+plenv_user: []

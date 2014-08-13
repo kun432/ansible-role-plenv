@@ -1,43 +1,46 @@
 ---
-# tasks file for system-wide install plenv 
 - name: create plugins directory (system)
-  file: state=directory path={{ plenv.system_plenv_root }}/plugins
+  file: path={{ plenv.install_path }}/plugins
+        state=directory
   sudo: true
-  when: plenv_system.plugins
+  when: plenv_system
+  tags:
+    - system
+    - plugin
 
-- name: install plugins (system)
-  git: repo={{ item.repo }} dest={{ plenv.system_plenv_root }}/plugins/{{ item.name }} version={{ item.version | default('HEAD') }}
-  with_items: plenv_system.plugins
-  sudo: true
-  when: plenv_system.plugins
-
-- name: check perl installed (system)
-  shell: bash -lc "plenv versions | grep {{ item }}"
-  sudo: true
-  register: perl_installed
+- name: install perl (system)
+  shell: bash -lc "plenv install {{ item }}"
+  sudo: yes
   with_items: plenv_system.perls
+  register: perl_install
   when: plenv_system.perls
-  failed_when: perl_installed.rc not in [0,1]
-  changed_when: perl_installed.rc == 1
+  failed_when: perl_install.rc not in [0,255]
+  changed_when: perl_install.rc == 0
+  notify:
+    - plenv rehash system
   tags:
+    - system
     - install
 
-- name: install perl (system)
-  shell: bash -lc "plenv install {{ item.0 }}"
+- name: check global perl version (system)
+  shell: bash -lc "plenv version | cut -d ' ' -f 1"
   sudo: yes
-  with_together:
-    - plenv_system.perls
-    - perl_installed.results
-  when: plenv_system.perls is defined and item.1.stdout.rc == 1
+  register: check_perl_global
+  when: plenv_system.global
+  changed_when: not check_perl_global.stdout
   tags:
-    - install
+    - system
+    - global
 
-- name: install perl (system)
-  shell: bash -lc "plenv install {{ item.0 }}"
+- name: set global perl version (system) 
+  shell: bash -lc "plenv global {{ plenv_system.global }}"
   sudo: yes
-  with_together:
-    - plenv_system.perls
-    - perl_installed.results
-  when: plenv_system.perls is defined and item.1.stdout.rc == 1
+  register: set_perl_global
+  when: plenv_system.global
+  changed_when: set_perl_global.rc == 0 and check_perl_global.stdout != plenv_system.global
+  notify:
+    - plenv rehash system
   tags:
-    - install
+    - system
+    - global
+

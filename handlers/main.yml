@@ -1,6 +1,6 @@
 ---
 # handlers file for plenv
 
-- name: rehash plenv system
+- name: plenv rehash system
   shell: bash -lc "plenv rehash"
   sudo: yes

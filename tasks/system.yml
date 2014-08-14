@@ -17,7 +17,7 @@
   failed_when: perl_install.rc not in [0,255]
   changed_when: perl_install.rc == 0
   notify:
-    - plenv rehash system
+    - rehash plenv system
   tags:
     - system
     - install

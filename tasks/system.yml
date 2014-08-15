@@ -2,39 +2,30 @@
 - name: create plugins directory (system)
   file: path={{ plenv.install_path }}/plugins
         state=directory
-  sudo: true
   when: plenv_system
   tags:
     - system
-    - plugin
 
 - name: install perl (system)
   shell: bash -lc "plenv install {{ item }}"
-  sudo: yes
   with_items: plenv_system.perls
   register: perl_install
   when: plenv_system.perls
   failed_when: perl_install.rc not in [0,255]
   changed_when: perl_install.rc == 0
-  notify:
-    - plenv rehash system
   tags:
     - system
-    - install
 
 - name: check global perl version (system)
   shell: bash -lc "plenv version | cut -d ' ' -f 1"
-  sudo: yes
   register: check_perl_global
   when: plenv_system.global
   changed_when: not check_perl_global.stdout
   tags:
     - system
-    - global
 
 - name: install cpanm (system)
   shell: bash -lc "plenv global {{ item }} && plenv install-cpanm"
-  sudo: yes
   with_items: plenv_system.perls
   register: cpanm_install
   when: plenv_system.perls
@@ -43,11 +34,9 @@
     - plenv rehash system
   tags:
     - system
-    - install
 
 - name: set global perl version (system) 
   shell: bash -lc "plenv global {{ plenv_system.global }}"
-  sudo: yes
   register: set_perl_global
   when: plenv_system.global
   changed_when: set_perl_global.rc == 0 and check_perl_global.stdout != plenv_system.global
@@ -55,5 +44,3 @@
     - plenv rehash system
   tags:
     - system
-    - global
-

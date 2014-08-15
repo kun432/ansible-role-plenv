@@ -4,7 +4,6 @@
        dest={{ plenv.install_path }}
        version={{ plenv.repo_version | default("HEAD") }}
        accept_hostkey=yes
-  sudo: true
   tags:
     - install
 
@@ -13,7 +12,6 @@
            dest={{ plenv.install_path}}/bin
            force=yes
   with_items: plenv.perlbuild_files
-  sudo: true
   tags:
     - install
 
@@ -21,7 +19,6 @@
   file: path={{ plenv.install_path }}/bin/{{ item.name }}
         mode=0755
   with_items: plenv.perlbuild_files
-  sudo: true
   tags:
     - install
 
@@ -31,6 +28,5 @@
             owner=root
             group=root
             mode=0755
-  sudo: true
   tags:
     - install

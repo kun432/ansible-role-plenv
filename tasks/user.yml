@@ -5,10 +5,10 @@
         group={{ item.group }}
   with_items: plenv_user
   sudo: true
+  sudo_user: {{ item.0.name }}
   when: plenv_user
   tags:
     - user
-    - plugin
 
 - name: install plugins (user)
   git: repo={{ item.1.repo }}
@@ -18,10 +18,10 @@
     - plenv_user
     - plugins
   sudo: true
+  sudo_user: {{ item.0.name }}
   when: plenv_user and item.1.plugins
   tags:
     - user
-    - plugin
 
 #- name: install perl (system)
 #  shell: bash -lc "plenv install {{ item }}"

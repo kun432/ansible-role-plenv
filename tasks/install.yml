@@ -1,4 +1,17 @@
 ---
+
+- name: install required packages
+  apt: pkg={{ item }}
+       state=present
+       update_cache=yes
+       install_recommends=no
+  with_items:
+    - git
+    - curl
+    - make
+  tags:
+    - install
+
 - name: checkout plenv from github
   git: repo={{ plenv.repo_url }}
        dest={{ plenv.install_path }}

@@ -6,3 +6,6 @@
 
 - name: system-wide settings
   include: 'system.yml'
+
+- name: user-specific settings
+  include: 'user.yml'

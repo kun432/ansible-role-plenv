@@ -1,0 +1,145 @@
+#!/bin/bash
+
+set -x
+eval $(perl -lne 'while(/\s?([^=\s]+)\s?=\s?(\"(?:\\\"|[^\"])+\"|\x27(?:\x27\\\x27\x27|[^\x27])+\x27|\S+)\s?/g){print "$1=$2"}' $1)
+
+changed=false
+rc=0
+ret_install_perl=0
+ret_install_cpanm=0
+ret_set_global=0
+
+is_command_exist()
+{
+    (type $1 > /dev/null 2>&1) && echo "yes"
+}
+
+is_user_exist()
+{
+
+    (awk -F":" '{ print $1 }' /etc/passwd | egrep "^${1}$" > /dev/null 2>&1) && echo "yes"
+}
+
+plenv_init()
+{
+    _user_homedir=$(awk -F":" '$1 ~ /^'"$1"'$/{ print $6 }' /etc/passwd)
+    export PLENV_ROOT="${_user_homedir}/.plenv"
+    eval "$(plenv init - )"
+}
+
+plenv_version()
+{
+   _global=$(plenv version)
+   echo "${_global}" | cut -d ' ' -f 1
+}
+
+plenv_install()
+{
+  plenv install $1 > /dev/null 2>&1
+  case $? in
+    0)   echo "yes"   ;;
+    255) echo "no"    ;;
+    *)   echo "error" ;;
+  esac
+}
+
+plenv_install_cpanm()
+{
+  stdout_install_cpanm=$(plenv global $1 && plenv install-cpanm 2>&1)
+  ret_install_cpanm=$?
+  if [ "${ret_install_cpanm}" != 0 ]; then
+     echo "error"
+  else
+    (echo "${stdout_install_cpanm}" | grep "Successfully installed App-cpanminus" > /dev/null 2>&1) 
+    if [ $? = 0 ]; then
+      echo "yes"
+    else
+      (echo "${stdout_install_cpanm}" | grep "App::cpanminus is up to date" > /dev/null 2>&1) 
+      if [ $? = 0 ]; then
+        echo "no"
+      else
+        echo "error"
+      fi
+    fi
+  fi
+}
+
+plenv_global()
+{
+  plenv global $1 > /dev/null 2>&1
+  [ $? -eq 0 ] && echo "yes" || echo "error"
+}
+
+# setup
+if [ "$(is_command_exist plenv)" != "yes" ]; then
+    printf "failed=true msg='plenv command not found'\n"
+    exit 1
+fi
+
+# user
+if [ -z "${user}" ]; then
+    printf "failed=true msg='no user defined'"
+    exit 1
+elif [ "$(is_user_exist ${user})" != "yes" ]; then
+    printf "failed=true msg='no user found'"
+    exit 1
+fi
+
+# init
+plenv_init $user
+
+# get current global version
+previous_global=$(plenv_version)
+
+# install  perl
+if [ -n "${perl}" ]; then
+  case "$(plenv_install ${perl})" in
+    "yes") ret_install_perl=1 ;;
+    "no")  ret_install_perl=0 ;;
+    *)     printf "failed=true msg=\"failed to install perl-${perl}\""
+           exit 1
+           ;;
+  esac
+  case "$(plenv_install_cpanm ${perl})" in
+    "yes") ret_install_cpanm=1 ;;
+    "no")  ret_install_cpanm=0 ;;
+    *)     printf "failed=true msg=\"failed to install cpanm for perl-${perl}\""
+           exit 1
+           ;;
+  esac
+fi
+
+# set global
+current_global=$(plenv_version)
+if [ -n "${global}" ]; then
+  if [ "${global}" != "${previous_global}" ]; then
+    if [ "$(plenv_global ${global})" = "yes" ]; then
+      ret_set_global=1
+    else
+      printf "failed=true msg=\"failed to set perl-${global} as global\""
+      exit 1
+    fi
+  else
+    if [ "$(plenv_global ${global})" != "yes" ]; then
+      printf "failed=true msg=\"failed to restore perl-${global} as global\""
+      exit 1
+    fi
+  fi
+else
+  if [ "${current_global}" != "${previous_global}" ]; then
+    if [ "$(plenv_global ${previous_global})" != "yes" ]; then
+      printf "failed=true msg=\"failed to restore perl-${previous_global} as global\""
+      exit 1
+    fi
+  fi
+fi
+
+# result 
+[ ${ret_install_perl} -ne 0 -o ${ret_install_cpanm} -ne 0 -o ${ret_set_global} -ne 0 ] && changed=true
+
+[ ${ret_install_perl} -eq 0 -a ${ret_install_cpanm} -eq "0" ] && message="perl-${perl} and cpanm already installed."
+[ ${ret_install_perl} -eq 1 -a ${ret_install_cpanm} -eq "1" ] && message="perl-${perl} and cpanm installed successfully."
+[ ${ret_install_perl} -eq 1 -a ${ret_install_cpanm} -eq "0" ] && message="perl-${perl} and cpanm already installed."
+[ ${ret_install_perl} -eq 0 -a ${ret_install_cpanm} -eq "1" ] && message="perl-${perl} and cpanm already installed."
+
+echo "rc=0 changed=${changed} message=\"${message}\""

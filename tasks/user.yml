@@ -1,24 +1,13 @@
-- name: create plugins directory (user)
-  file: path=~{{ item.name }}/.plenv/plugins
-        state=directory
-        owner={{ item.name }}
-        group={{ item.group }}
-  with_items: plenv_user
-  sudo: true
-  sudo_user: "{{ item.name }}"
-  when: plenv_user
-  tags:
-    - user
-
-- name: install perl (user)
-  shell: bash -lc "plenv install {{ item.1 }}"
+- name: install perl
+  plenv: user="{{ item.0.name }}" perl="{{ item.1 }}"
   with_subelements:
     - plenv_user
     - perls
-  register: perl_install
-  sudo: true
-  sudo_user: "{{ item.0.name }}"
-  failed_when: perl_install.rc not in [0,255]
-  changed_when: perl_install.rc == 0
+  tags:
+    - user
+
+- name: set global perl
+  plenv: user="{{ item.name }}" global="{{ item.global }}"
+  with_items: plenv_user
   tags:
     - user

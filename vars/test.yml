@@ -1,19 +1,13 @@
-plenv_system:
-  perls:
-    - 5.20.0
-    - 5.14.0
-    - 5.16.0
-  global: 5.20.0
-#plenv_user:
-#  - name: foo
-#    group: foo
-#    perls:
-#      - 5.20.0
-#      - 5.16.0
-#    global: 5.20.0
-#  - name: bar
-#    group: bar
-#    perls:
-#      - 5.18.0
-#      - 5.14.0
-#    global: 5.14.0
+plenv_user:
+  - name: foo
+    group: foo
+    perls:
+      - 5.20.0
+      - 5.16.0
+    global: 5.20.0
+  - name: bar
+    group: bar
+    perls:
+      - 5.18.0
+      - 5.14.0
+    global: 5.14.0

@@ -1,13 +1,18 @@
 #!/bin/bash
 
-set -x
 eval $(perl -lne 'while(/\s?([^=\s]+)\s?=\s?(\"(?:\\\"|[^\"])+\"|\x27(?:\x27\\\x27\x27|[^\x27])+\x27|\S+)\s?/g){print "$1=$2"}' $1)
 
-changed=false
+if [ -n "${debug}" ]; then
+  set -x
+fi
+
+changed="false"
 rc=0
 ret_install_perl=0
 ret_install_cpanm=0
 ret_set_global=0
+messages=()
+message=""
 
 is_command_exist()
 {
@@ -20,10 +25,28 @@ is_user_exist()
     (awk -F":" '{ print $1 }' /etc/passwd | egrep "^${1}$" > /dev/null 2>&1) && echo "yes"
 }
 
+get_uid()
+{
+    _uid=$(awk -F":" '$1 ~ /^'"$1"'$/{ print $3 }' /etc/passwd)
+    echo $_uid
+}
+
+get_gid()
+{
+    _gid=$(awk -F":" '$1 ~ /^'"$1"'$/{ print $4 }' /etc/passwd)
+    echo $_uid
+}
+
+get_homedir()
+{
+    _homedir=$(awk -F":" '$1 ~ /^'"$1"'$/{ print $6 }' /etc/passwd)
+    echo $_homedir
+}
+
 plenv_init()
 {
-    _user_homedir=$(awk -F":" '$1 ~ /^'"$1"'$/{ print $6 }' /etc/passwd)
-    export PLENV_ROOT="${_user_homedir}/.plenv"
+    #_user_homedir=$(awk -F":" '$1 ~ /^'"$1"'$/{ print $6 }' /etc/passwd)
+    export PLENV_ROOT="$(get_homedir $1)/.plenv"
     eval "$(plenv init - )"
 }
 
@@ -134,12 +157,16 @@ else
   fi
 fi
 
-# result 
-[ ${ret_install_perl} -ne 0 -o ${ret_install_cpanm} -ne 0 -o ${ret_set_global} -ne 0 ] && changed=true
-
-[ ${ret_install_perl} -eq 0 -a ${ret_install_cpanm} -eq "0" ] && message="perl-${perl} and cpanm already installed."
-[ ${ret_install_perl} -eq 1 -a ${ret_install_cpanm} -eq "1" ] && message="perl-${perl} and cpanm installed successfully."
-[ ${ret_install_perl} -eq 1 -a ${ret_install_cpanm} -eq "0" ] && message="perl-${perl} and cpanm already installed."
-[ ${ret_install_perl} -eq 0 -a ${ret_install_cpanm} -eq "1" ] && message="perl-${perl} and cpanm already installed."
-
-echo "rc=0 changed=${changed} message=\"${message}\""
+# result
+if [ ${ret_install_perl} -gt 0 -o ${ret_install_cpanm} -gt 0 -o ${ret_set_global} -gt 0 ]; then
+  chown -r $(get_uid $user):$(get_gid $user) $PLENV_ROOT
+  changed="true"
+fi
+messages=("${messages[@]}" "plenv_root=\"${PLENV_ROOT}\"")
+[ ${ret_install_perl}  -gt 0 ] && messages=("${messages[@]}" "perl=\"${perl}\"")
+[ ${ret_install_cpanm} -gt 0 ] && messages=("${messages[@]}" "cpanm=\"${perl}\"")
+[ ${ret_set_global}    -gt 0 ] && messages=("${messages[@]}" "global=\"${global}\"")
+if [ ${#messages[*]} -gt 0 ]; then
+    eval 'message="${messages[*]}"'
+fi
+echo "rc=0 changed=${changed} message=$message"
